@@ -58,6 +58,7 @@ namespace GhostParty
         private Graphics localG;
         private Color[] PColors;
         private String welcomeMsg;
+        private Dictionary<string, Bitmap> allImages;
 
         public MyForm()
         {
@@ -70,14 +71,33 @@ namespace GhostParty
             PColors = new Color[8] { Color.Red, Color.Blue, Color.Yellow, Color.Magenta, Color.Green, Color.Cyan, Color.DarkRed, Color.DarkViolet };
             diceImgs = new Bitmap[7];
 
+            // load all images from resources
+            allImages = new Dictionary<string, Bitmap>();
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            foreach (var resourceName in assembly.GetManifestResourceNames())
+            {
+                if (!resourceName.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)) continue;
+
+                // load from stream (which must remain alive)
+                var stream = assembly.GetManifestResourceStream(resourceName);
+                // return the name of the asset "folder1.folder2.name.extension"
+                // shorten name
+                var parts = resourceName.Split('.');
+                var name = parts.Length == 0 ? resourceName :
+                    (parts.Length == 1 ? parts[0] : parts[parts.Length - 2]);
+
+                // load images
+                allImages.Add(name, new Bitmap(stream, useIcm: false));
+            } // foreach
+
             try
             {
-                diceImgs[1] = new Bitmap("images\\dice1.bmp", false);
-                diceImgs[2] = new Bitmap("images\\dice2.bmp", false);
-                diceImgs[3] = new Bitmap("images\\ghost.bmp", false);
-                diceImgs[4] = new Bitmap("images\\dice4.bmp", false);
-                diceImgs[5] = new Bitmap("images\\dice5.bmp", false);
-                diceImgs[6] = new Bitmap("images\\ghost.bmp", false);
+                diceImgs[1] = allImages["dice1"];
+                diceImgs[2] = allImages["dice2"];
+                diceImgs[3] = allImages["ghost"];
+                diceImgs[4] = allImages["dice4"];
+                diceImgs[5] = allImages["dice5"];
+                diceImgs[6] = allImages["ghost"];
             }
             catch (ArgumentException)
             {
@@ -87,7 +107,7 @@ namespace GhostParty
 
             try
             {
-                backGround = new Bitmap("images\\board.bmp", false);
+                backGround = allImages["board"];
             }
             catch (ArgumentException)
             {
@@ -545,7 +565,7 @@ namespace GhostParty
                         {
                             try
                             {
-                                guestImg = new Bitmap("images\\Player" + i + ".bmp", false);
+                                guestImg = allImages["Player" + i];
                             }
                             catch (ArgumentException)
                             {
@@ -566,7 +586,7 @@ namespace GhostParty
 
                         try
                         {
-                            guestImg = new Bitmap("images\\ghost.bmp", false);
+                            guestImg = allImages["ghost"];
                         }
                         catch (ArgumentException)
                         {
